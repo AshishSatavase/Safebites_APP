@@ -1,5 +1,6 @@
 {
   "expo": {
+    "entryPoint": "expo-router/entry",
     "name": "app5",
     "slug": "app5",
     "version": "1.0.0",
