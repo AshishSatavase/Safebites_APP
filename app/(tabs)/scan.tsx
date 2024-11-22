@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import "../../global.css"
+import "../../global.css";
 
 const Scan = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -46,9 +46,14 @@ const Scan = () => {
     }
   };
 
+  // Function to clear the selected image
+  const retry = () => {
+    setSelectedImage(null);
+  };
+
   return (
-<View className="flex-1 bg-blue-100  items-center justify-center">
-        <Text className="text-2xl font-bold mb-6">Scan Product</Text>
+    <View className="flex-1 bg-blue-100 items-center justify-center">
+      <Text className="text-2xl font-bold mb-6">Scan Product</Text>
 
       {/* Buttons to open camera or gallery */}
       <View className="flex-row justify-around w-full mb-6">
@@ -75,11 +80,22 @@ const Scan = () => {
             source={{ uri: selectedImage }}
             className="w-72 h-72 rounded-lg mb-4"
           />
-          <TouchableOpacity className="bg-green-500 py-4 px-6 rounded-lg">
-            <Text className="text-white text-lg font-semibold">
-              Check Allergy
-            </Text>
-          </TouchableOpacity>
+          <View className="flex-row justify-around w-full">
+            {/* Check Allergy Button */}
+            <TouchableOpacity className="bg-green-500 py-4 px-6 rounded-lg">
+              <Text className="text-white text-lg font-semibold">
+                Check Allergy
+              </Text>
+            </TouchableOpacity>
+
+            {/* Retry Button */}
+            <TouchableOpacity
+              className="bg-red-500 py-4 px-6 rounded-lg"
+              onPress={retry}
+            >
+              <Text className="text-white text-lg font-semibold">Retry</Text>
+            </TouchableOpacity>
+          </View>
         </>
       )}
     </View>
