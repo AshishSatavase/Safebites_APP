@@ -5,14 +5,32 @@ import {
   TextInputBase,
   TextInput,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
-import React from "react";
-import { Link } from "expo-router";
+import React, { useEffect } from "react";
+import { Link, useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = () => {
+  const router=useRouter();
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (token) {
+          // Navigate to the tabs page if token exists
+          router.replace("/(tabs)");
+        }
+      } catch (error) {
+        console.error("Error checking token:", error);
+      }
+    };
+
+    checkToken();
+  }, []);
   return (
-    <View className=" flex-1">
+    <ScrollView className=" flex-1">
       <Image
         source={require("../assets/images/Login.png")}
         className="h-[400px] w-full object-cover"
@@ -41,7 +59,7 @@ const Login = () => {
           <Text>Register now</Text>
         </Link>{" "}
       </Text>
-    </View>
+    </ScrollView>
   );
 };
 

@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -5,32 +6,70 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import React, { useState } from "react";
 import { RadioButton } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
-import { FontAwesome } from "@expo/vector-icons"; // Import FontAwesome
+import { FontAwesome, Ionicons } from "@expo/vector-icons"; // Import FontAwesome
+import axios from "axios"; // Import axios
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import { useRouter } from "expo-router"; // Import useRouter for navigation
+import * as FileSystem from "expo-file-system";
+
 
 const SignUp: React.FC = () => {
   const [selectedAllergy, setSelectedAllergy] = useState<string>("");
   const [dietPreference, setDietPreference] = useState<"veg" | "nonveg">("veg");
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [name,setName]=useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [age, setAge] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Loading state
+  const router = useRouter(); // useRouter for navigation
 
-  // Image Picker Function
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (token) {
+          // Navigate to the tabs page if token exists
+          router.replace("/(tabs)");
+        }
+      } catch (error) {
+        console.error("Error checking token:", error);
+      }
+    };
 
-    if (!result.canceled && result.assets[0].uri) {
-      setProfileImage(result.assets[0].uri);
-    }
+    checkToken();
+  }, []); // Run only once on component load
+
+  // Handle Sign-Up
+  const handleSignUp = async () => {
+    setIsLoading(true); // Set loading to true
+    console.log("a");
+    try {
+      console.log("n");
+      const response = await axios.post("http://192.168.0.103:7000/register", {
+          name,
+          userId: username,
+          age,
+          password,
+          allergy: selectedAllergy,
+          dietPreference,
+      });
+      console.log("b");
+      if (response.status === 201) {
+          await AsyncStorage.setItem("token", JSON.stringify(response.data.user));
+          router.push("/(tabs)"); // Navigate to the tabs page
+      }
+  } catch (error) {
+      console.error("Error during registration:", error); // Log the error
+      alert("Registration failed. Please try again.");
+  } finally {
+      setIsLoading(false); // Set loading to false
+  }
+  
   };
 
   return (
@@ -40,14 +79,40 @@ const SignUp: React.FC = () => {
         className="h-[300px] w-full object-cover"
       />
       <Text className="text-center text-3xl font-bold mb-5 color-blue-600 mt-5">Signup!!</Text>
-
+      
       {/* Form Section */}
       <View className="flex justify-center items-center gap-6">
         {/* Username Input */}
         <View className="flex flex-row items-center border-2 rounded-2xl w-[300px] pl-2">
-          <FontAwesome name="user-o" size={20} className="mx-2" />
-          <TextInput placeholder="Enter Username" className="flex-1 p-3" />
+          <FontAwesome name="smile-o" size={20} className="mx-2" />
+          <TextInput
+            placeholder="Full Name"
+            className="flex-1 p-3"
+            value={name}
+            onChangeText={setName}
+          />
         </View>
+
+        <View className="flex flex-row items-center border-2 rounded-2xl w-[300px] pl-2">
+          <Ionicons name="calendar-number-outline" size={20} className="mx-2" />
+          <TextInput
+            placeholder="Enter age"
+            className="flex-1 p-3"
+            value={age}
+            onChangeText={setAge}
+          />
+        </View>
+
+        <View className="flex flex-row items-center border-2 rounded-2xl w-[300px] pl-2">
+          <FontAwesome name="user-o" size={20} className="mx-2" />
+          <TextInput
+            placeholder="Enter Username"
+            className="flex-1 p-3"
+            value={username}
+            onChangeText={setUsername}
+          />
+        </View>
+
 
         {/* Password Input */}
         <View className="flex flex-row items-center border-2 rounded-2xl w-[300px] pl-2">
@@ -56,18 +121,12 @@ const SignUp: React.FC = () => {
             placeholder="Enter Password"
             secureTextEntry
             className="flex-1 p-3"
+            value={password}
+            onChangeText={setPassword}
           />
         </View>
 
         {/* Confirm Password Input */}
-        <View className="flex flex-row items-center border-2 rounded-2xl w-[300px] pl-2">
-          <FontAwesome name="lock" size={20} className="mx-2" />
-          <TextInput
-            placeholder="Confirm Password"
-            secureTextEntry
-            className="flex-1 p-3"
-          />
-        </View>
 
         {/* Allergies Picker */}
         <Picker
@@ -108,26 +167,14 @@ const SignUp: React.FC = () => {
           </View>
         </View>
 
-        {/* Profile Photo Upload */}
-        <TouchableOpacity
-          onPress={pickImage}
-          className="bg-gray-300 p-3 w-[300px] rounded-md mb-4"
-        >
-          <Text className="text-center">
-            {profileImage ? "Change Profile Photo" : "Upload Profile Photo"}
-          </Text>
-        </TouchableOpacity>
-        {profileImage && (
-          <Image
-            source={{ uri: profileImage }}
-            className="h-20 w-20 rounded-full mb-4"
-          />
-        )}
 
         {/* Sign-Up Button */}
-        <TouchableOpacity className="bg-blue-500 p-3 w-[300px] rounded-xl mb-32">
+        <TouchableOpacity
+          onPress={handleSignUp}
+          className="bg-blue-500 p-3 w-[300px] rounded-xl mb-32"
+        >
           <Text className="text-center font-semibold text-xl text-white ">
-            Signup
+            {isLoading ? "Signing Up..." : "Signup"}
           </Text>
         </TouchableOpacity>
       </View>

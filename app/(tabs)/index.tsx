@@ -10,7 +10,7 @@ const Index = () => {
   return (
     <View className='flex justify-center items-center flex-1'>
       <Text className='text-center'>index of tab</Text>
-      <TouchableOpacity className='bg-fuchsia-400 w-[70px] p-3 text-center'>
+      <TouchableOpacity className='bg-red-400 w-[70px] p-3 text-center'>
         <Text className='w-full text-center' onPress={onLogin}>Helo</Text>
       </TouchableOpacity>
     </View>

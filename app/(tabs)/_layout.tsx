@@ -1,8 +1,28 @@
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Tabs, useRouter } from "expo-router";
+import { useEffect } from "react";
+
 
 
 export default function TabLayout() {
+  const router=useRouter();
+  
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+          // Navigate to the tabs page if token exists
+          router.replace("./login");
+        }
+      } catch (error) {
+        console.error("Error checking token:", error);
+      }
+    };
+
+    checkToken();
+  }, []);
   return (
     <Tabs>
       <Tabs.Screen
