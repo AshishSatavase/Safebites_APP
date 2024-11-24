@@ -47,9 +47,7 @@ const SignUp: React.FC = () => {
   // Handle Sign-Up
   const handleSignUp = async () => {
     setIsLoading(true); // Set loading to true
-    console.log("a");
     try {
-      console.log("n");
       const response = await axios.post("http://192.168.0.103:7000/register", {
           name,
           userId: username,
@@ -58,7 +56,6 @@ const SignUp: React.FC = () => {
           allergy: selectedAllergy,
           dietPreference,
       });
-      console.log("b");
       if (response.status === 201) {
           await AsyncStorage.setItem("token", JSON.stringify(response.data.user));
           router.push("/(tabs)"); // Navigate to the tabs page

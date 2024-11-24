@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import "../../global.css";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SimpleLineIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 const Profile = () => {
   // Sample user data (replace with dynamic data)
@@ -31,6 +32,7 @@ const Profile = () => {
   };
 const logout=()=>{
   removeToken();
+  router.navigate("/login");
 }
   // Fetch data when the component mounts
   useEffect(() => {
