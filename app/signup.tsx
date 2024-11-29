@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Platform,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
@@ -139,11 +138,13 @@ const SignUp: React.FC = () => {
           style={{ height: 70, width: 300 }}
         >
           <Picker.Item label="Select Your Allergy" value="" />
-          <Picker.Item label="Dairy" value="dairy" />
-          <Picker.Item label="Shellfish" value="shellfish" />
-          <Picker.Item label="Peanuts" value="peanuts" />
-          <Picker.Item label="Tree Nuts" value="tree_nuts" />
-          <Picker.Item label="Egg" value="egg" />
+          <Picker.Item label="Milk" value="Milk" />
+          <Picker.Item label="Egg" value="Egg" />
+          <Picker.Item label="Peanuts" value="Nut" />          
+          <Picker.Item label="Fish" value="Fish" />
+          <Picker.Item label="Crustacean" value="Crustacean" />
+          <Picker.Item label="Soy" value="Soy" />
+          <Picker.Item label="Sulphite" value="Sulphite" />
         </Picker>
 
         {/* Diet Preference Radio Buttons */}

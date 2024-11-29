@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign, MaterialIcons, Feather } from '@expo/vector-icons';
 
 const Scan = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [detectedText, setDetectedText] = useState<string | null>(null);
+  const [productStatus, setProductStatus] = useState<string | null>(null);
+  const [userAllergies,setUserAllergies]=useState<string | null>(null);
 
+
+  const scanProductUrl = 'http://127.0.0.1:7000/scanproduct'; 
   const ocrUrl = 'https://jaided.ai/api/ocr';  // Your OCR API endpoint
   const ocrHeaders = {
     username: 'ashishsatavase',  // Replace with your actual username
@@ -127,12 +132,67 @@ const handleOCR = async () => {
   }finally{
     setLoading(false);
   }
+
+
+
 };
+
+  // Function to check allergies by sending the detected text and user allergies to the scanproduct API
+  const checkAllergy = async () => {
+    if (!detectedText) {
+      Alert.alert('Error', 'No product detected. Please scan a product first.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Retrieve user allergies from AsyncStorage
+      const token = await AsyncStorage.getItem("token"); // Retrieve token
+      if (token) {
+        const user = JSON.parse(token); // Parse token into an object
+        setUserAllergies(user.allergy)
+      }
+      
+      if (!userAllergies) {
+        Alert.alert('Error', 'No allergies found in storage.');
+        return;
+      }
+
+      const payload = {
+        productName: detectedText,
+        userAllergies: userAllergies,
+      };
+
+      const response = await fetch("http://192.168.0.102:7000/scanproduct", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to connect to allergy detection API');
+      }
+
+      const result = await response.json();
+      console.log(result);
+
+      setProductStatus(result.status === 'safe' ? 'Safe to eat' : 'Not safe to eat');
+    } catch (error) {
+      console.error('Allergy detection error:', error);
+      Alert.alert('Error', 'Failed to check allergies.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Function to clear the selected image
   const retry = () => {
     setSelectedImage(null);
     setDetectedText(null);
+    setProductStatus(null);
+
   };
 
   return (
@@ -171,9 +231,18 @@ const handleOCR = async () => {
       </View>
     )}
 
-    {loading && <ActivityIndicator size="large" color="#6200ee" style={styles.loader} />}
+      {loading && <ActivityIndicator size="large" color="#6200ee" style={styles.loader} />}
 
-    {detectedText && <Text style={styles.detectedText}>Detected Text: {detectedText}</Text>}
+      {detectedText && (
+        <>
+          <Text style={styles.detectedText}>Detected Text: {detectedText}</Text>
+          <TouchableOpacity style={[styles.button, styles.checkButton]} onPress={checkAllergy}>
+            <Text style={styles.buttonText}>Check Allergy</Text>
+          </TouchableOpacity>
+        </>
+      )}
+
+      {productStatus && <Text style={styles.productStatus}>{productStatus}</Text>}
   </View>
 );
 };
@@ -243,6 +312,16 @@ detectedText: {
   fontSize: 18,
   marginTop: 20,
   color: '#333',
+  textAlign: 'center',
+},
+checkButton: {
+  backgroundColor: '#FF9800',
+  marginTop: 20,
+},
+productStatus: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  marginTop: 20,
   textAlign: 'center',
 },
 });
