@@ -44,7 +44,7 @@ const Login = () => {
     }
 
     try {
-      const response = await axios.post("http://192.168.0.103:7000/login", {
+      const response = await axios.post("http://192.168.0.102:7000/login", {
         userId,password
     });
     if (response.status === 200) {

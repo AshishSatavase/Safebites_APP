@@ -48,26 +48,33 @@ const SignUp: React.FC = () => {
   const handleSignUp = async () => {
     setIsLoading(true); // Set loading to true
     try {
-      const response = await axios.post("http://192.168.0.103:7000/register", {
-          name,
-          userId: username,
-          age,
-          password,
-          allergy: selectedAllergy,
-          dietPreference,
+      const response = await axios.post("http://192.168.0.102:7000/register", {
+        name,
+        userId: username,
+        age,  // Ensure age is a string if expected
+        password,
+        allergy: selectedAllergy,
+        dietPreference
       });
-      if (response.status === 201) {
-          await AsyncStorage.setItem("token", JSON.stringify(response.data.user));
+
+      // Log the full response for debugging
+      console.log(response);
+
+      // Check if the registration was successful based on response status
+      if (response.status === 200 && response.data.status === "ok") {
+          await AsyncStorage.setItem("token", JSON.stringify(response.data.user));  // Save the user data as token
           router.push("/(tabs)"); // Navigate to the tabs page
+      } else {
+          alert("Registration failed: " + response.data.message);  // Show error message if registration fails
       }
-  } catch (error) {
+
+    } catch (error) {
       console.error("Error during registration:", error); // Log the error
       alert("Registration failed. Please try again.");
-  } finally {
+    } finally {
       setIsLoading(false); // Set loading to false
-  }
-  
-  };
+    }
+};
 
   return (
     <ScrollView className="flex-1 bg-white">

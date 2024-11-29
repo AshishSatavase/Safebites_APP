@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { StyleSheet } from 'react-native';
+import { AntDesign, MaterialIcons, Feather } from '@expo/vector-icons';
 
 const Scan = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -114,6 +116,7 @@ const handleOCR = async () => {
       
 
       console.log(`Detected Text: ${mainText}`);
+      setDetectedText(mainText);
       
     } else {
       Alert.alert('Message', 'No prominent text detected.');
@@ -133,39 +136,115 @@ const handleOCR = async () => {
   };
 
   return (
-    <View className="flex-1 bg-blue-100 items-center justify-center">
-      <Text className="text-2xl font-bold mb-6">Scan Product</Text>
+    <View style={styles.container}>
+    <Text style={styles.title}>Scan Product</Text>
 
-      <View className="flex-row justify-around w-full mb-6">
-        <TouchableOpacity className="bg-blue-500 py-4 px-6 rounded-lg" onPress={openCamera}>
-          <Text className="text-white text-lg font-semibold">Open Camera</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="bg-blue-500 py-4 px-6 rounded-lg" onPress={openGallery}>
-          <Text className="text-white text-lg font-semibold">Upload from Gallery</Text>
-        </TouchableOpacity>
-      </View>
-
-      {selectedImage && (
-        <>
-          <Image source={{ uri: selectedImage }} className="w-72 h-72 rounded-lg mb-4" />
-          <View className="flex-row justify-around w-full">
-            <TouchableOpacity className="bg-green-500 py-4 px-6 rounded-lg" onPress={handleOCR}>
-              <Text className="text-white text-lg font-semibold">Check Allergy</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="bg-red-500 py-4 px-6 rounded-lg" onPress={retry}>
-              <Text className="text-white text-lg font-semibold">Retry</Text>
-            </TouchableOpacity>
-          </View>
-        </>
-      )}
-
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
-
-      {detectedText && (
-        <Text className="text-lg mt-4 font-semibold">{`Detected Text: ${detectedText}`}</Text>
-      )}
+    <View style={styles.buttonRow}>
+      <TouchableOpacity style={styles.button} onPress={openCamera}>
+        <AntDesign name="camera" size={24} color="white" />
+        <Text style={styles.buttonText}>Open Camera</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={openGallery}>
+        <Feather name="upload" size={24} color="white" />
+        <Text style={styles.buttonText}>Upload Image</Text>
+      </TouchableOpacity>
     </View>
-  );
+
+    {selectedImage ? (
+      <>
+        <Image source={{ uri: selectedImage }} style={styles.image} />
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={[styles.button, styles.scanButton]} onPress={handleOCR}>
+            <MaterialIcons name="search" size={24} color="white" />
+            <Text style={styles.buttonText}>Scan Product</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.retryButton]} onPress={retry}>
+            <AntDesign name="reload1" size={24} color="white" />
+            <Text style={styles.buttonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    ) : (
+      <View style={styles.imagePlaceholder}>
+        <Feather name="image" size={48} color="#ccc" />
+        <Text style={styles.placeholderText}>No image selected</Text>
+      </View>
+    )}
+
+    {loading && <ActivityIndicator size="large" color="#6200ee" style={styles.loader} />}
+
+    {detectedText && <Text style={styles.detectedText}>Detected Text: {detectedText}</Text>}
+  </View>
+);
 };
+
+const styles = StyleSheet.create({
+container: {
+  flex: 1,
+  backgroundColor: 'linear-gradient(to bottom, #E0F7FA, #FFFFFF)',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingHorizontal: 16,
+},
+title: {
+  fontSize: 28,
+  fontWeight: 'bold',
+  marginBottom: 16,
+  color: '#333',
+},
+buttonRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  width: '100%',
+  marginBottom: 20,
+},
+button: {
+  backgroundColor: '#007AFF',
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  borderRadius: 10,
+  marginHorizontal: 10,
+},
+scanButton: {
+  backgroundColor: '#4CAF50',
+},
+retryButton: {
+  backgroundColor: '#FF5252',
+},
+buttonText: {
+  marginLeft: 8,
+  color: '#FFFFFF',
+  fontSize: 16,
+},
+image: {
+  width: 300,
+  height: 300,
+  borderRadius: 10,
+  marginBottom: 16,
+},
+imagePlaceholder: {
+  width: 300,
+  height: 300,
+  borderRadius: 10,
+  backgroundColor: '#F0F0F0',
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+placeholderText: {
+  color: '#777',
+  marginTop: 10,
+},
+loader: {
+  marginTop: 20,
+},
+detectedText: {
+  fontSize: 18,
+  marginTop: 20,
+  color: '#333',
+  textAlign: 'center',
+},
+});
 
 export default Scan;

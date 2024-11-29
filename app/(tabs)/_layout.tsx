@@ -41,6 +41,13 @@ export default function TabLayout() {
         }}
         />
         <Tabs.Screen
+          name="searchBar"
+          options={{
+            title: 'SearchBarWithEfficientArray',
+            tabBarIcon: ({ color }) => <FontAwesome size={28} name="search" color={color} />,
+          }}
+        />
+        <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
