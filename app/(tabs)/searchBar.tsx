@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather"; // Feather icon library
-import BackgroundWrapper from "../BackgroundWrapper";
 
 const SearchBarWithEfficientArray = () => {
   const products = useMemo(() =>  [

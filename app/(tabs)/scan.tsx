@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,10 +10,12 @@ const Scan = () => {
   const [loading, setLoading] = useState(false);
   const [detectedText, setDetectedText] = useState<string | null>(null);
   const [productStatus, setProductStatus] = useState<string | null>(null);
+  const[productName,setProductName]= useState<string | null>(null);
+  const[productAllergies,setProductAllergies]= useState([]);
+
   const [userAllergies,setUserAllergies]=useState<string | null>(null);
 
 
-  const scanProductUrl = 'http://127.0.0.1:7000/scanproduct'; 
   const ocrUrl = 'https://jaided.ai/api/ocr';  // Your OCR API endpoint
   const ocrHeaders = {
     username: 'ashishsatavase',  // Replace with your actual username
@@ -139,10 +141,7 @@ const handleOCR = async () => {
 
   // Function to check allergies by sending the detected text and user allergies to the scanproduct API
   const checkAllergy = async () => {
-    if (!detectedText) {
-      Alert.alert('Error', 'No product detected. Please scan a product first.');
-      return;
-    }
+    
 
     setLoading(true);
     try {
@@ -159,11 +158,11 @@ const handleOCR = async () => {
       }
 
       const payload = {
-        productName: detectedText,
+        productName: "MTR Ready To Eat Paneer Butter Masala",
         userAllergies: userAllergies,
       };
 
-      const response = await fetch("http://192.168.0.102:7000/scanproduct", {
+      const response = await fetch("http://192.168.0.104:7000/scanproduct", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +176,8 @@ const handleOCR = async () => {
 
       const result = await response.json();
       console.log(result);
-
+      setProductName(result.product);
+      setProductAllergies(result.allergens);
       setProductStatus(result.status === 'safe' ? 'Safe to eat' : 'Not safe to eat');
     } catch (error) {
       console.error('Allergy detection error:', error);
@@ -196,11 +196,16 @@ const handleOCR = async () => {
   };
 
   return (
-    <View style={styles.container}>
-    <Text style={styles.title}>Scan Product</Text>
+    <ScrollView >
+      <View className='flex-1 flex items-center p-0'>
+
+      <View style={styles.heroSection} className='w-full mb-10'>
+
+    <Text className="text-4xl font-bold text-white ">Scan Product</Text>
+      </View>
 
     <View style={styles.buttonRow}>
-      <TouchableOpacity style={styles.button} onPress={openCamera}>
+      <TouchableOpacity style={styles.button} onPress={checkAllergy}>
         <AntDesign name="camera" size={24} color="white" />
         <Text style={styles.buttonText}>Open Camera</Text>
       </TouchableOpacity>
@@ -212,7 +217,7 @@ const handleOCR = async () => {
 
     {selectedImage ? (
       <>
-        <Image source={{ uri: selectedImage }} style={styles.image} />
+        <Image source={{ uri: selectedImage }} style={styles.image} className='border-2 p-1' />
         <View style={styles.buttonRow}>
           <TouchableOpacity style={[styles.button, styles.scanButton]} onPress={handleOCR}>
             <MaterialIcons name="search" size={24} color="white" />
@@ -225,7 +230,7 @@ const handleOCR = async () => {
         </View>
       </>
     ) : (
-      <View style={styles.imagePlaceholder}>
+      <View style={styles.imagePlaceholder} className=''>
         <Feather name="image" size={48} color="#ccc" />
         <Text style={styles.placeholderText}>No image selected</Text>
       </View>
@@ -236,14 +241,45 @@ const handleOCR = async () => {
       {detectedText && (
         <>
           <Text style={styles.detectedText}>Detected Text: {detectedText}</Text>
-          <TouchableOpacity style={[styles.button, styles.checkButton]} onPress={checkAllergy}>
+          <TouchableOpacity style={[styles.button, styles.checkButton]} className='mb-10' onPress={checkAllergy}>
             <Text style={styles.buttonText}>Check Allergy</Text>
           </TouchableOpacity>
         </>
       )}
+      </View>
 
-      {productStatus && <Text style={styles.productStatus}>{productStatus}</Text>}
+    
+      {
+        productStatus &&
+        <View className="w-11/12 p-4 bg-white rounded-lg shadow-lg self-center mt-8">
+  {/* Product Info Section */}
+  <View className="flex-row items-center">
+    <Image 
+      source={{ uri: selectedImage }} 
+      className="w-24 h-24 rounded-lg mr-4"
+    />
+    <View className="flex-1">
+      <Text className="text-xl font-bold text-gray-800">{productName}</Text>
+      <View className="border-b border-gray-300 my-2" />
+      <Text className="text-lg text-gray-600">
+        Allergens: <Text className="font-medium text-gray-700">{productAllergies}</Text>
+      </Text>
+    </View>
   </View>
+
+  {/* Status Section */}
+  <TouchableOpacity 
+    className={`w-full py-3 mt-4 rounded-lg ${productStatus == 'Not safe to eat' ? 'bg-red-500' : 'bg-green-500'}`}
+  >
+    <Text className="text-center text-white text-lg font-semibold">
+      {productStatus}
+    </Text>
+  </TouchableOpacity>
+</View>
+
+      }
+      
+  </ScrollView>
 );
 };
 
@@ -292,6 +328,12 @@ image: {
   height: 300,
   borderRadius: 10,
   marginBottom: 16,
+},
+heroSection: {
+  backgroundColor: '#1E88E5',
+  height: 180,
+  justifyContent: 'center',
+  alignItems: 'center',
 },
 imagePlaceholder: {
   width: 300,

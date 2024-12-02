@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { Shield, Zap, Microscope } from 'lucide-react-native';
+import * as Network from 'expo-network';
+
+
+
 
 export default function Index() {
+  const [ipv4,setIpv4]=useState("");
+  const getIp=async()=>{
+    console.log("Jel");
+    try {
+      // Fetch the IP Address
+      const ipAddress = await Network.getIpAddressAsync();
+      console.log("IP Address:", ipAddress);  // Logs the IP Address
+    } catch (error) {
+      console.error("Error fetching IP address:", error);  // Error handling
+    }
+  }
   return (
     <ScrollView style={styles.container}>
       {/* Hero Section */}
@@ -19,7 +34,7 @@ export default function Index() {
             placeholder="Enter product name or scan barcode"
             style={styles.input}
           />
-          <TouchableOpacity style={styles.detectButton}>
+          <TouchableOpacity style={styles.detectButton} onPress={getIp}>
             <Text style={styles.buttonText}>Scan</Text>
           </TouchableOpacity>
         </View>

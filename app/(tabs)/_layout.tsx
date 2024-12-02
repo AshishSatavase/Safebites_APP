@@ -24,7 +24,7 @@ export default function TabLayout() {
     checkToken();
   }, []);
   return (
-    <Tabs>
+    <Tabs >
       <Tabs.Screen
         name="index"
         options={{
@@ -43,7 +43,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="searchBar"
           options={{
-            title: 'SearchBarWithEfficientArray',
+            title: 'SearchProduct',
             tabBarIcon: ({ color }) => <FontAwesome size={28} name="search" color={color} />,
           }}
         />
