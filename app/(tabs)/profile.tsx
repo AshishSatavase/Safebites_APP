@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import "../../global.css";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SimpleLineIcons } from '@expo/vector-icons';
@@ -40,7 +40,7 @@ const logout=()=>{
   }, []);
 
   return (
-    <View>
+    <ScrollView>
 
       {user?(
         <>
@@ -96,7 +96,7 @@ const logout=()=>{
         </>):(<Text>Loading</Text>)
         
       }
-    </View>
+    </ScrollView>
     
   );
 };

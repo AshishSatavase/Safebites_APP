@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { StyleSheet } from 'react-native';
@@ -15,7 +15,22 @@ const Scan = () => {
 
   const [userAllergies,setUserAllergies]=useState<string | null>(null);
 
-
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (token) {
+          const user = JSON.parse(token);
+          setUserAllergies(user.allergy);
+        }
+      } catch (error) {
+        console.error("Error fetching token:", error);
+      }
+    };
+  
+    fetchToken();
+  }, []);
+  
   const ocrUrl = 'https://jaided.ai/api/ocr';  // Your OCR API endpoint
   const ocrHeaders = {
     username: 'ashishsatavase',  // Replace with your actual username
@@ -141,52 +156,58 @@ const handleOCR = async () => {
 
   // Function to check allergies by sending the detected text and user allergies to the scanproduct API
   const checkAllergy = async () => {
-    
-
     setLoading(true);
     try {
       // Retrieve user allergies from AsyncStorage
       const token = await AsyncStorage.getItem("token"); // Retrieve token
       if (token) {
         const user = JSON.parse(token); // Parse token into an object
-        setUserAllergies(user.allergy)
+        setUserAllergies(user.allergy);
       }
-      
+  
       if (!userAllergies) {
-        Alert.alert('Error', 'No allergies found in storage.');
+        Alert.alert("Error", "No allergies found in storage.");
         return;
       }
-
+  
       const payload = {
-        productName: "MTR Ready To Eat Paneer Butter Masala",
+        productName: detectedText,
         userAllergies: userAllergies,
       };
-
-      const response = await fetch("http://192.168.0.104:7000/scanproduct", {
-        method: 'POST',
+  
+      const response = await fetch("http://192.168.200.151:7000/scanproduct", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to connect to allergy detection API');
+  
+      if (response.status === 404) {
+        // Product not found case
+        setProductName("Product not found");
+        setProductAllergies("Unknown");
+        setProductStatus("Unable to Define");
+        return; // Exit early
       }
-
+  
+      if (!response.ok) {
+        throw new Error("Failed to connect to allergy detection API");
+      }
+  
       const result = await response.json();
       console.log(result);
       setProductName(result.product);
       setProductAllergies(result.allergens);
-      setProductStatus(result.status === 'safe' ? 'Safe to eat' : 'Not safe to eat');
+      setProductStatus(result.status === "safe" ? "Safe to consume" : "Not safe to consume");
     } catch (error) {
-      console.error('Allergy detection error:', error);
-      Alert.alert('Error', 'Failed to check allergies.');
+      console.error("Allergy detection error:", error);
+      Alert.alert("Error", "Failed to check allergies.");
     } finally {
       setLoading(false);
     }
   };
-
+  
   // Function to clear the selected image
   const retry = () => {
     setSelectedImage(null);
@@ -194,95 +215,106 @@ const handleOCR = async () => {
     setProductStatus(null);
 
   };
-
-  return (
-    <ScrollView >
-      <View className='flex-1 flex items-center p-0'>
-
-      <View style={styles.heroSection} className='w-full mb-10'>
-
-    <Text className="text-4xl font-bold text-white ">Scan Product</Text>
-      </View>
-
-    <View style={styles.buttonRow}>
-      <TouchableOpacity style={styles.button} onPress={checkAllergy}>
-        <AntDesign name="camera" size={24} color="white" />
-        <Text style={styles.buttonText}>Open Camera</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={openGallery}>
-        <Feather name="upload" size={24} color="white" />
-        <Text style={styles.buttonText}>Upload Image</Text>
-      </TouchableOpacity>
-    </View>
-
-    {selectedImage ? (
-      <>
-        <Image source={{ uri: selectedImage }} style={styles.image} className='border-2 p-1' />
+  return loading ? (
+    <ActivityIndicator size="large" color="#6200ee" className="flex-1 justify-center items-center" />
+  ) : (
+    <ScrollView>
+      <View className="flex-1 flex items-center p-0">
+        <View style={styles.heroSection} className="w-full mb-10">
+          <Text className="text-4xl font-bold text-white">Scan Product</Text>
+        </View>
+  
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={[styles.button, styles.scanButton]} onPress={handleOCR}>
-            <MaterialIcons name="search" size={24} color="white" />
-            <Text style={styles.buttonText}>Scan Product</Text>
+          <TouchableOpacity style={styles.button} onPress={openCamera}>
+            <AntDesign name="camera" size={24} color="white" />
+            <Text style={styles.buttonText}>Open Camera</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.retryButton]} onPress={retry}>
-            <AntDesign name="reload1" size={24} color="white" />
-            <Text style={styles.buttonText}>Retry</Text>
+          <TouchableOpacity style={styles.button} onPress={openGallery}>
+            <Feather name="upload" size={24} color="white" />
+            <Text style={styles.buttonText}>Upload Image</Text>
           </TouchableOpacity>
         </View>
-      </>
-    ) : (
-      <View style={styles.imagePlaceholder} className=''>
-        <Feather name="image" size={48} color="#ccc" />
-        <Text style={styles.placeholderText}>No image selected</Text>
+  
+        {selectedImage ? (
+          <>
+            <Image
+              source={{ uri: selectedImage }}
+              style={styles.image}
+              className="border-2 p-1"
+            />
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.button, styles.scanButton]}
+                onPress={handleOCR}
+              >
+                <MaterialIcons name="search" size={24} color="white" />
+                <Text style={styles.buttonText}>Scan Product</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.retryButton]}
+                onPress={retry}
+              >
+                <AntDesign name="reload1" size={24} color="white" />
+                <Text style={styles.buttonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Feather name="image" size={48} color="#ccc" />
+            <Text style={styles.placeholderText}>No image selected</Text>
+          </View>
+        )}
+  
+        {detectedText && (
+          <>
+            <Text style={styles.detectedText}>Detected Text: {detectedText}</Text>
+            <TouchableOpacity
+              style={[styles.button, styles.checkButton]}
+              className="mb-10"
+              onPress={checkAllergy}
+            >
+              <Text style={styles.buttonText}>Check Allergy</Text>
+            </TouchableOpacity>
+          </>
+        )}
+  
+        {productStatus && (
+          <View className="w-11/12 p-4 bg-white rounded-lg shadow-lg self-center mt-8">
+            <View className="flex-row items-center">
+              <Image
+                source={{ uri: selectedImage }}
+                className="w-24 h-24 rounded-lg mr-4"
+              />
+              <View className="flex-1">
+                <Text className="text-xl font-bold text-gray-800">
+                  {productName}
+                </Text>
+                <View className="border-b border-gray-300 my-2" />
+                <Text className="text-lg text-gray-600">
+                  Allergens:{" "}
+                  <Text className="font-medium text-gray-700">
+                    {productAllergies}
+                  </Text>
+                </Text>
+              </View>
+            </View>
+  
+            <TouchableOpacity
+              className={`w-full py-3 mt-4 rounded-lg ${
+                productStatus == "Not safe to consume" ? "bg-red-500" : "bg-green-500"
+              }`}
+            >
+              <Text className="text-center text-white text-lg font-semibold">
+                {productStatus}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
-    )}
-
-      {loading && <ActivityIndicator size="large" color="#6200ee" style={styles.loader} />}
-
-      {detectedText && (
-        <>
-          <Text style={styles.detectedText}>Detected Text: {detectedText}</Text>
-          <TouchableOpacity style={[styles.button, styles.checkButton]} className='mb-10' onPress={checkAllergy}>
-            <Text style={styles.buttonText}>Check Allergy</Text>
-          </TouchableOpacity>
-        </>
-      )}
-      </View>
-
-    
-      {
-        productStatus &&
-        <View className="w-11/12 p-4 bg-white rounded-lg shadow-lg self-center mt-8">
-  {/* Product Info Section */}
-  <View className="flex-row items-center">
-    <Image 
-      source={{ uri: selectedImage }} 
-      className="w-24 h-24 rounded-lg mr-4"
-    />
-    <View className="flex-1">
-      <Text className="text-xl font-bold text-gray-800">{productName}</Text>
-      <View className="border-b border-gray-300 my-2" />
-      <Text className="text-lg text-gray-600">
-        Allergens: <Text className="font-medium text-gray-700">{productAllergies}</Text>
-      </Text>
-    </View>
-  </View>
-
-  {/* Status Section */}
-  <TouchableOpacity 
-    className={`w-full py-3 mt-4 rounded-lg ${productStatus == 'Not safe to eat' ? 'bg-red-500' : 'bg-green-500'}`}
-  >
-    <Text className="text-center text-white text-lg font-semibold">
-      {productStatus}
-    </Text>
-  </TouchableOpacity>
-</View>
-
-      }
-      
-  </ScrollView>
-);
-};
-
+    </ScrollView>
+  );
+}
 const styles = StyleSheet.create({
 container: {
   flex: 1,
